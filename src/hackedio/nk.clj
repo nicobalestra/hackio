@@ -1,8 +1,7 @@
-(ns hackedio-overtone.nk
+(ns hackedio.nk
   (:use [overtone.live]
-        [hackedio-overtone.hue])
+        [hackedio.hue])
   )
-(connected-midi-devices)
 
 (def nk (midi-in "nanoKONTROL2"))
 

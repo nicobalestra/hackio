@@ -1,4 +1,4 @@
-(ns hackedio-overtone.hue
+(ns hackedio.hue
   (:require [clj-http.client :as http]
             [cheshire.core :as ch]))
 
