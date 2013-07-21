@@ -29,23 +29,23 @@
   )
 
 (defn hue-get-state [n]
-  (println (str url "/lights/" n "/state"))
-  (ch/parse-string
-   (:body (http/get
-            (str url "/lights/" n "/state"))))
-  )
+  (let [light-obj  (ch/parse-string
+                    (:body (http/get (str url "/lights/" n))))]
+    (println "Returning state of " light-obj )
+    (get light-obj "state")
+    )
 
-(defn hue-set-state
-  "Set the status of a bulb or, if no bulb number is specified, set the state of all bulbs"
-  ([{:keys [on sat bri hue alert] :or {on true sat 255 bri 255 hue 65535} :as settings}]
-     (let [lights (hue-get-lights)
-           k (keys lights)]
-       (doseq [light-n k]
-         (hue-set-state light-n settings)))
-     )
-  ([n {:keys [on sat bri hue] :or {on true sat 255 bri 255 hue 65535} :as settings}]
-     (println "Setting state of bulb " n " via url " (str url "/lights/" n "/state"))
-     (println (http/put (str url "/lights/" n "/state") {:body (ch/generate-string settings)} ))))
+  (defn hue-set-state
+    "Set the status of a bulb or, if no bulb number is specified, set the state of all bulbs"
+    ([{:keys [on sat bri hue alert] :or {on true sat 255 bri 255 hue 65535} :as settings}]
+       (let [lights (hue-get-lights)
+             k (keys lights)]
+         (doseq [light-n k]
+           (hue-set-state light-n settings)))
+       )
+    ([n {:keys [on sat bri hue] :or {on true sat 255 bri 255 hue 65535} :as settings}]
+       (println "Setting state of bulb " n " via url " (str url "/lights/" n "/state"))
+       (println (http/put (str url "/lights/" n "/state") {:body (ch/generate-string settings)} )))))
 
 (defn hue-start-loop []
   (hue-set-state {:on true :effect "colorloop" :transitiontime 1}))
@@ -58,8 +58,7 @@
     (println "Setting of bulb " bulb)
     (if n
       (hue-set-state bulb {:on false})
-      (hue-set-state {:on false})))
-  )
+      (hue-set-state {:on false}))))
 
 (defn hue-turn-them-on [& n]
   (let [bulb (first n)]
