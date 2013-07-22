@@ -2,8 +2,8 @@
   (:require [clj-http.client :as http]
             [cheshire.core :as ch]))
 
-(def endpoint "http://192.168.1.18")
-(def username "nicobalestra")
+(def endpoint "http://192.168.2.203")
+(def username "newdeveloper")
 (def url (str endpoint "/api/" username))
 
 (def red 0)
