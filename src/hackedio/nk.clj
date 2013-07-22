@@ -1,8 +1,11 @@
 (ns hackedio.nk
   (:use [overtone.live]
-        [hackedio.hue])
+        [hackedio.hue]
+        [hackedio.core]
+        [hackedio.sowhat :as sowhat])
   )
-(connected-midi-devices)
+
+;(connected-midi-devices)
 
 (def nk (midi-in "nanoKONTROL2"))
 
@@ -150,14 +153,100 @@
   )
 
 
+(defmethod handle-nk 42 [event]
+  "Handle STOP button to stop everything (possibly lights and music)"
+  (hue-turn-them-off)
+  (remove-handler  ::handle-via-nk)
+  (stop)
+  )
+
+(defmethod handle-nk 3 [event]
+  "Handle forth SLIDE (change TEMPO)"
+  (let [power (:velocity event)
+        bpm (+ 120 power)]
+    (alter-var-root
+     (var nome)
+     (fn [_]
+       (metronome bpm)
+       ))
+    (change-brightness 1 event)
+    (change-brightness 2 event)
+    (change-brightness 3 event)
+    (println "Current bpm is " (metro-bpm nome))
+    ))
+
+(defmethod handle-nk 19 [event]
+  "Handle forth KNOB (change pitch)"
+  (let [vel (:velocity event)
+        ]
+    (swap! base-note (fn [_ vel]
+                        (if  (> vel 63)
+                          (- vel 63)
+                          (* (- 63 vel) -1)
+                          )) vel))
+  (println "Current pitch offset " @base-note)
+  )
+
+
+(defmethod handle-nk 67 [event]
+  "Handle forth R button (play something)"
+  (println "\n PRESSED R BUTTON\n")
+  (hue-start-loop)
+
+  (let [rand (rand-int 4)
+        phrases {1 sowhat/section-b-phrase-1
+                 2 sowhat/section-b-phrase-2
+                 3 sowhat/section-b-phrase-3}
+        curr-phrase (get phrases rand)
+        ]
+    (reset! track1 curr-phrase)
+   (interspaced (beat-ms 8 (metro-bpm nome)) (partial play-track track1))))
+
+(defmethod handle-nk 68 [event]
+  "Handle fifth R button (play something)"
+  (hue-start-loop)
+  (let [rand (rand-int 4)
+        phrases {1 sowhat/section-b-phrase-1
+                 2 sowhat/section-b-phrase-2
+                 3 sowhat/section-b-phrase-3}
+        curr-phrase (get phrases rand)
+        ]
+    (reset! track1 curr-phrase)
+   (interspaced (beat-ms 8 (metro-bpm nome)) (partial play-track track1))))
+
+(defmethod handle-nk 68 [event]
+  "Handle sixth R button (play something)"
+  (hue-start-loop)
+  (let [rand (rand-int 4)
+        phrases {1 sowhat/section-b-phrase-1
+                 2 sowhat/section-b-phrase-2
+                 3 sowhat/section-b-phrase-3}
+        curr-phrase (get phrases rand)
+        ]
+    (reset! track1 curr-phrase)
+   (interspaced (beat-ms 8 (metro-bpm nome)) (partial play-track track1))))
+
+(defmethod handle-nk 69 [event]
+  "Handle seventh R button (play something)"
+  (hue-start-loop)
+  (kick))
+
 (defmethod handle-nk :default [event]
   (println "No need to handle note " (:note event)))
 
 
 
 (defn handle-nk-events [event]
-  (let [n (:note event)])
-  (handle-nk event)
-  (println event))
+  (let [n (:note event)]
+    (println "MIDI EVENT: " event)
+    (handle-nk event))
+  )
+
+(comment (on-event [:midi :control-change]
+                   (fn [event]
+                     (let [n (:note event)]
+                       (println "MIDI EVENT: " event)
+                       (handle-nk event)))
+                   ::handle-via-nk))
 
 (midi-handle-events nk #'handle-nk-events)

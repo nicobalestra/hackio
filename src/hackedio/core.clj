@@ -9,6 +9,7 @@
 (def nome (metronome 125))
 (def kick (sample (freesound-path 2086)))
 (def rimshot (sample (freesound-path 132418)))
+(def base-note (atom 0))
 
 (defn next-measure
   "Given a metronome, tells you when the next measure will begin."
@@ -26,7 +27,7 @@
                offset
                ))
       (doseq [n notes]
-        (instrument (note n)))))
+        (instrument (+ @base-note (note n))))))
 
 (defn play-track
   [track-atom]
